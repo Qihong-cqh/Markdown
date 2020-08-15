@@ -28,6 +28,7 @@ BFC是一个独立布局环境，内部元素不受外部元素的影响，外�
 *** 
 
 ### display、position、float的联系
+
 ```
 display:
     block|inline|inline-block|table|flex|grid
@@ -72,45 +73,50 @@ zoom：1 （兼容ie6）触发haslayout属性
 *** 
 
 ### 水平居中、垂直居中
+
 > 水平居中
+
 ```
 * 行内元素：text-align:center
 * 块级元素（width确定）：
-    ** margin：0 auto
-    ** {    //绝对定位 + margin-left：负宽度/2
+    1. margin：0 auto
+    2. {    //绝对定位 + margin-left：负宽度/2
         position:absolute;
         left:50%;
         margin-left:-width/2
         }
 * 块级元素（不确定）
-    ** display：table + margin: auto
-    ** display:inline-block + text-align:center
-    ** {    //绝对定位+transform
+    1. display：table + margin: auto
+    2. display:inline-block + text-align:center
+    3. {    //绝对定位+transform
         position:absolute;
         left:50%;
         transform:translateX(-50%);
     } 
-    ** {    //flex布局
+    4. {    //flex布局
         display:flex;
         justify-content:center;
     }
 ```
 
 > 垂直居中
+
 ```
-* line-height: 适合文字内容垂直居中
-* 跟水平居中类似：使用绝对定位 + margin 实现垂直居中
-* 同样使用 绝对定位 + transform 实现垂直居中
-* 父级元素设置display：table + 子元素设置 display：table-cell vertical-align：middle。注意：vertical-align只适合行内元素（inline）或表格单元格（table-cell）元素。
-* flex布局： {
+1. line-height: 适合文字内容垂直居中
+2. 跟水平居中类似：使用绝对定位 + margin 实现垂直居中
+3. 同样使用 绝对定位 + transform 实现垂直居中
+4. 父级元素设置display：table + 子元素设置 display：table-cell vertical-align：middle。注意：vertical-align只适合行内元素（inline）或表格单元格（table-cell）元素。
+5. flex布局： {
             display:flex;
             align:-items:center;
         }
 ```
 
 > 垂直水平居中
+
 ```
-* position + margin（宽高确定）：
+1. position + margin（宽高确定）：
+
 父元素{
     position:relative;
 }
@@ -124,7 +130,8 @@ zoom：1 （兼容ie6）触发haslayout属性
     margin-top:-50px;
 }
 
-* 绝对定位 + 各个方向为0 + margin：auto（宽高确定）
+2. 绝对定位 + 各个方向为0 + margin：auto（宽高确定）
+
 父元素{
     positon:relative;
 }
@@ -139,7 +146,8 @@ zoom：1 （兼容ie6）触发haslayout属性
     margin:auto;
 }
 
-* position + transform (宽高未知)
+3. position + transform (宽高未知)
+
 父元素{
     position:relative;
 } 
@@ -150,7 +158,8 @@ zoom：1 （兼容ie6）触发haslayout属性
     transfrom:translate(-50%,-50%);
 }
 
-* flex布局
+4. flex布局
+
 {
     display:flex;
     justify-content:center;
@@ -161,7 +170,9 @@ zoom：1 （兼容ie6）触发haslayout属性
 *** 
 
 ### 常见的css布局
+
 > 两列布局：左边固定，右边自适应
+
 ```
 1. 左元素浮动 + 右元素 margin-left
 .left{
@@ -227,8 +238,10 @@ zoom：1 （兼容ie6）触发haslayout属性
 ```
 
 > 三列布局：
+
 ```
 1. 左右float + 中间margin 。注意：中间一栏需要放到left和right的html元素后，不然会抢占右元素的位置。
+
 .parent{
     height:100px;
 }
@@ -251,6 +264,7 @@ zoom：1 （兼容ie6）触发haslayout属性
 }
 
 2. 左右绝对定位 + 中间margin
+
 .parent{
     position:relative;
     height:100px;
@@ -275,6 +289,7 @@ zoom：1 （兼容ie6）触发haslayout属性
 }
 
 3. flex 布局。html元素需要顺序摆放
+
 .parent{
     height:100px;
     display:flex;
@@ -296,6 +311,7 @@ zoom：1 （兼容ie6）触发haslayout属性
 }
 
 4. grid 布局。html元素需要顺序摆放
+
 .parent{
     height:100px;
     display:grid;
@@ -352,6 +368,7 @@ zoom：1 （兼容ie6）触发haslayout属性
 }
 
 6. 双飞翼布局。在圣杯布局的基础上进行了一定的优化,左右位置的保留是通过中间列的margin来实现，而不是父元素的padding，本质上，也是通过浮动和外边距负值来实现的。
+
 ** html 实现
 <div class="parent">
     <div class="middle">
@@ -360,6 +377,7 @@ zoom：1 （兼容ie6）触发haslayout属性
     <div class="left">left</div>
     <div class="right">right</div>
 </div>
+
 ** css 实现
 .parent{
     height:100px;
@@ -395,6 +413,7 @@ zoom：1 （兼容ie6）触发haslayout属性
 flex布局和gird布局都是很强大的布局，可以应对很多需求。<br>
 
 > flex布局
+
 采用 Flex 布局的元素，称为 Flex 容器（flex container），简称"容器"。它的所有子元素自动成为容器成员，称为 Flex 项目（flex item），简称"项目"。
 
 ```
@@ -416,6 +435,7 @@ flex布局和gird布局都是很强大的布局，可以应对很多需求。<br
 ```
 
 > grid布局
+
 跟flex布局类似，采用网格布局的区域，称为"容器"（container）。容器内部采用网格定位的子元素，称为"项目"（item）。
 
 ```
@@ -471,9 +491,9 @@ flex布局和gird布局都是很强大的布局，可以应对很多需求。<br
 *** 
 
 ### 参考：
-<a href='http://www.ruanyifeng.com/blog/2019/03/grid-layout-tutorial.html'>CSS Grid 网格布局教程</a>
-<a href='http://www.ruanyifeng.com/blog/2015/07/flex-grammar.html'>Flex 布局教程：语法篇</a>
-<a href='https://www.cnblogs.com/jackyWHJ/p/3756087.html'>position跟display、margin collapse、overflow、float这些特性相互叠加后会怎么样？</a>
-<a href='https://juejin.im/post/6844904031769329678#heading-31'>重整旗鼓，2019自结前端面试小册【CSS + HTML】</a>
+<a href='http://www.ruanyifeng.com/blog/2019/03/grid-layout-tutorial.html'>CSS Grid 网格布局教程</a><br>
+<a href='http://www.ruanyifeng.com/blog/2015/07/flex-grammar.html'>Flex 布局教程：语法篇</a><br>
+<a href='https://www.cnblogs.com/jackyWHJ/p/3756087.html'>position跟display、margin collapse、overflow、float这些特性相互叠加后会怎么样？</a><br>
+<a href='https://juejin.im/post/6844904031769329678#heading-31'>重整旗鼓，2019自结前端面试小册【CSS + HTML】</a><br>
 <a href='https://github.com/CavsZhouyou/Front-End-Interview-Notebook/blob/master/Css/Css.md'>CSS 面试知识点总结</a>
-
+<br>

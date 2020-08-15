@@ -3,6 +3,7 @@
 ## 概念解析
 RDBMS:关联式数据库，例如；mysql、sql<br>
 SQL:Not only SQL ，例如：MongoDB
+
 |  SQL        | MongoDB     |  解释说明 |
 | ----------- |-----------  |  ----    |
 |  database   | database    |  数据库   | 
@@ -11,6 +12,7 @@ SQL:Not only SQL ，例如：MongoDB
 | column      | field       |   列/域 |
 | index       | index       |  索引 |
 | primary key | primary key | 主键 |
+
 ***
 
 ## 基本操作

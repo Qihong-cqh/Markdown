@@ -55,10 +55,8 @@ git config --l  //可以查看信息是否正确
 alt="创建成功提示，可以根据提示进行下一步提交">
 
 * 如果本地已经有仓库了，可以直接使用，就可以提交成功了
-* ```
-* git remote add origin 这里是一个git地址，可以在提示里看到
+* git remote add origin + git地址 （这个git地址可以在提示里看到）
 * git push -u origin master
-* ```
 
 ### 查看当前的远程仓库（github）
 ```

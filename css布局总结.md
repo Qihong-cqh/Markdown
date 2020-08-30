@@ -421,7 +421,7 @@ flex布局和gird布局都是很强大的布局，可以应对很多需求。<br
 * flex-direction：row|row-reverse|column|column-reverse 用来决定主轴的方向。
 * flex-wrap：nowrap|wrap|wrap-reverse 决定换行的方式
 * flex-flow：<flex-direction>||<flex-wrap> 是flex-direction和flex-wrap的简写，默认值为row nowrap
-* justify-content：flex-start|flex-end|ce nter|space-between|space-around 决定了项目在主轴上的对齐方式
+* justify-content：flex-start|flex-end|center|space-between|space-around 决定了项目在主轴上的对齐方式
 * align-items：flex-start|flex-end|center|baseline|stretch 决定了项目在交叉轴上的对齐方式
 * align-content：flex-start|flex-end|center|baseline|stretch 决定了多条轴线的对齐方式，如果只有一条轴线，则不起作用
 
@@ -459,7 +459,7 @@ flex布局和gird布局都是很强大的布局，可以应对很多需求。<br
 
 * grid-template-areas: 用于指定grid中的区域，如果某些区域不需要，可以使用“.”来表示。
 
-* grid-auto-flow：row|column|row-dense|row-column 按照顺序自动放置网格，默认是“先行后列”。row-dense和column-dense 用于尽可能填满，不出现空格。
+* grid-auto-flow：row|column|row-dense|column-dense 按照顺序自动放置网格，默认是“先行后列”。row-dense和column-dense 用于尽可能填满，不出现空格。
 
 * justify-items：start|end|center|stretch 设置单元格内容的水平位置
 * align-items：start|end|center|stretch 设置单元格内容的垂直位置

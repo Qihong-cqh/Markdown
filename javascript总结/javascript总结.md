@@ -2,18 +2,26 @@
 
 框架参考：
 //https://juejin.im/post/6844904116339261447
-1. 数据类型、转换、隐式转换、判断
-2. 执行上下文--作用域链、变量对象、this、闭包
-3. this指向--call、apply、bind
-4. 原型、对象的创建和继承
-5. 事件循环--eventloop
-6. es6 增强语法、模块化
-7. 异步流程：promise、settimeout、settimeinterval
-8. 深浅拷贝
-9. dom事件、bom事件
-10. 正则
-11. 手写代码
-12. 各种api总结
+1. 数据类型、转换、隐式转换、判断       get
+2. 执行上下文--作用域、作用域链、变量对象、this、闭包   get
+3. 原型、对象的创建和继承               get
+三种事件模型、事件循环--eventloop
+javascript垃圾回收、v8引擎垃圾回收
+es6 增强语法、模块化--let/const/var 
+异步流程：promise、settimeout、settimeinterval、generator、await/async
+dom事件、bom事件
+正则    --阮一峰
+ajax
+手写代码：{
+    深浅拷贝，
+    promise、await、async
+    call、bind、apply
+    new
+    柯里化
+    sleep
+    冴羽大佬专题
+}
+
 
 ### 1.数据类型、转换、隐式转换、判断
 
@@ -513,9 +521,531 @@ console.log(a.call(null));      //[object Null]
 
 <a href='https://juejin.im/post/6844903990904225805'>「前端料包」可能是最透彻的JavaScript数据类型详解</a><br>
 
-### 2.执行上下文--作用域链、变量对象、this、闭包
+红宝书--Javascript高级程序设计第三版
 
-### 4.原型、对象的创建和继承
+### 2.执行上下文--作用域、作用域链、变量对象、this、闭包
+
+#### 作用域
+作用域是指源代码中定义变量的区域，javascript采用了词法(静态)作用域，函数的作用域在函数定义是就决定了。
+
+```
+var value=1
+function foo(){
+    console.log(value)
+}
+function bar(){
+    var value=2
+    foo()
+}
+bar()       //结果为1
+//bar()-> foo()-> 查找value -> 没有局部变量value -> 查找到全局变量value，输出
+```
+
+#### 执行上下文栈
+javascript的可执行代码有三种：全局代码、函数代码、eval代码。比如当执行到一个函数时，就会开始进行准备工作，专业说法就是“执行上下文（execution context）”。对于每个执行上下文，都有三个重要属性：
+1. 变量对象（Variable object，VO）
+2. 作用域链（Scope chain）
+3. this
+
+为了管理执行上下文，js引擎创建了执行上下文栈（Execution context stack，ECS）来管理执行上下文，可以简单模拟 ECS 为一个数组：ECStack = []
+
+全局代码最先遇到，而又会在整个程序结束时，ECStack 才会清空，所以程序结束前，ECStack 最底部永远有个 globalContext：ECStack = [globalContext]
+
+下面来看一个简单的例子：
+
+```
+function fun3() {
+    console.log('fun3')
+}
+function fun2() {
+    fun3();
+}
+function fun1() {
+    fun2();
+}
+fun1();
+```
+
+当执行一个函数的时候，就会创建一个执行上下文，并且压入执行上下文栈，当函数执行完毕的时候，就会将函数的执行上下文从栈中弹出。
+
+```
+// 伪代码
+
+ECStack.push(<fun1> functionContext);   // fun1()
+
+ECStack.push(<fun2> functionContext);   // fun1中竟然调用了fun2，还要创建fun2的执行上下文
+
+ECStack.push(<fun3> functionContext);   // fun2还调用了fun3！
+
+ECStack.pop();      // fun3执行完毕
+ECStack.pop();      // fun2执行完毕
+ECStack.pop();      // fun1执行完毕
+
+// javascript接着执行下面的代码，但是ECStack底层永远有个globalContext
+```
+
+#### 变量对象
+变量对象是与执行上下文相关的数据作用域，存储了在上下文中定义的变量和函数声明。
+
+##### 全局上下文的变量对象
+
+简单来说，全局上下文中的变量对象就是全局对象，全局对象是预定义的对象，作为 JavaScript 的全局函数和全局属性的占位符。通过使用全局对象，可以访问所有其他所有预定义的对象、函数和属性。
+
+##### 函数上下文的变量对象
+
+在函数上下文中，我们用活动对象(activation object, AO)来表示变量对象。
+
+活动对象和变量对象其实是一个东西，只是变量对象是规范上的或者说是引擎实现上的，不可在 JavaScript 环境中访问，只有到当进入一个执行上下文中，这个执行上下文的变量对象才会被激活，所以才叫 activation object 呐，而只有被激活的变量对象，也就是活动对象上的各种属性才能被访问。
+
+活动对象是在进入函数上下文时刻被创建的，它通过函数的 arguments 属性初始化。arguments 属性值是 Arguments 对象。
+
+##### 进入执行上下文
+
+执行上下文的代码会分成两个阶段进行：分析和执行。也可以叫做
+
+1. 进入执行上下文
+
+2. 代码执行
+
+
+当进入执行上下文，这时还没有执行代码。
+
+变量对象会包括：
+
+1. 函数的所有形参（如果是函数上下文）
+* 由名称和对应值组成的一个变量对象的属性被创建
+* 没有实参，则属性值设为undefined
+
+2. 函数声明
+* 由名称和对应值（函数对象 function-object）组成的一个变量对象的属性被创建
+* 如果变量对象已经存在相同名称的属性，则完全替换这个属性。
+
+3. 变量声明
+* 由名称和对应值（undefined）组成的一个变量对象的属性被创建
+* 如果变量名称跟已经声明的形式参数或函数相同，则变量声明不会干扰这些已经存在的属性。
+
+> 即需要注意的是：刚进入执行上下文（没有执行代码之前），变量重复声明不影响，函数重复声明会替换，如果是在代码执行阶段则可以替换。
+
+```
+function foo(a){
+    var b=2
+    function c(){}
+    var d=function(){}
+
+    b=3
+}
+foo(1)
+```
+
+在进入执行上下文后，这时候的AO是：
+
+```
+AO={
+    arguments:{
+        0:1,
+        length:1
+    },
+    a:1,
+    b:3,
+    c:reference to function c(){}
+    d:reference to FunctionExpression 'd' 
+}
+```
+
+> 变量对象的创建过程总结：
+> 1. 全局上下文的变量对象初始化就是全局对象
+> 2. 函数上下文的变量对象初始化值包括 Arguments 对象
+> 3. 在进入执行上下文时会给变量对象添加形参、函数声明、变量声明等初始的属性值
+> 4. 在代码执行阶段，会再次修改变量对象的属性值
+
+##### 代码执行
+
+在代码执行阶段，会顺序执行代码，根据代码，修改变量对象的值。
+
+上面的例子当代码执行完后，这时的AO是：
+
+```
+AO={
+    arguments:{
+        0:1,
+        length:1
+    },
+    a:1,
+    b:undefined,
+    c:reference to function c(){}
+    d:undefined
+}
+```
+
+#### 作用域链
+当查找变量的时候，会先从当前上下文的变量对象中查找，如果没有找到，就会从父级(词法层面上的父级)执行上下文的变量对象中查找，一直找到全局上下文的变量对象，也就是全局对象。这样由多个执行上下文的变量对象构成的链表就叫做作用域链。
+
+##### 函数创建
+下面，让我们以一个函数的创建和激活两个时期来讲解作用域链是如何创建和变化的。
+
+函数的作用域在函数定义的时候就决定了（静态作用域）。这是因为函数有一个内部属性 [[scope]]，当函数创建的时候，就会保存所有父变量对象到其中。
+
+```
+//For example:
+
+function foo(){
+    function bar(){
+        ...
+    }
+}
+```
+
+函数创建时，各自的[[scope]]为：
+```
+foo.[[scope]]=[
+    globalContext.VO
+]
+bar.[[scope]]=[
+    fooContext.AO
+    globalContext.VO
+]
+```
+
+##### 函数激活
+当函数激活时，进入函数上下文，创建VO/AO后，就会将活动对象添加到作用域链的前端。
+
+这时执行上下文的作用域链，我们命名为Scope：
+
+```
+Scope= [AO].concat([[Scope]])
+//Scope --> [AO,[Scope]] ,即当前活动对象在前面，执行上下文的作用域在后面
+```
+
+##### 具体的例子
+结合前面的变量对象和执行上下文栈，我们来总结一下函数执行上下文中作用域链和变量对象的创建过程。
+
+```
+//For example:
+
+var scope= 'global scope'
+function checkscope(){
+    var scope2='lobal scope'
+    return scope2
+}
+checkscope()
+```
+
+执行过程如下：
+
+> 1. checkscope函数被创建，保存作用域链到内部属性[[scope]]
+
+```
+checkscope.[[scope]]=[globalContext.VO]
+```
+
+> 2. 执行 checkscope 函数，创建 checkscope 函数执行上下文，checkscope 函数执行上下文被压入执行上下文栈
+
+```
+ECStack = [
+    checkscopeContext,
+    globalContext
+]
+```
+
+> 3. checkscope 函数并不立刻执行，开始做准备工作，第一步：复制函数[[scope]]属性创建作用域链
+
+```
+checkscopeContext = {
+    Scope: checkscope.[[scope]],
+}
+```
+
+> 4. 第二步：用 arguments 创建活动对象，随后初始化活动对象，加入形参、函数声明、变量声明
+
+```
+checkscopeContext = {
+    AO: {
+        arguments: {
+            length: 0
+        },
+        scope2: undefined
+    }，
+    Scope: checkscope.[[scope]],
+}
+```
+
+> 5. 第三步：将活动对象压入 checkscope 作用域链顶端
+
+```
+checkscopeContext = {
+    AO: {
+        arguments: {
+            length: 0
+        },
+        scope2: undefined
+    },
+    Scope: [AO, [[Scope]]]
+}
+```
+
+> 6. 准备工作做完，开始执行函数，随着函数的执行，修改 AO 的属性值
+
+```
+checkscopeContext = {
+    AO: {
+        arguments: {
+            length: 0
+        },
+        scope2: 'local scope'
+    },
+    Scope: [AO, [[Scope]]]
+}
+```
+
+> 7. 查找到 scope2 的值，返回后函数执行完毕，函数上下文从执行上下文栈中弹出
+
+```
+ECStack = [
+    globalContext
+];
+```
+
+##### 理解分析：
+这个例子比较长，涉及到执行上下文栈（压栈、出栈）、变量对象（刚进入执行上下文、执行代码）、作用域链（函数创建时、函数激活时）
+
+简单的整理一下例子中发生的顺序：
+
+1. 函数创建，初始化作用域链
+2. 执行checkscope(),创建checkscope函数的上下文，并将上下文压栈
+3. 准备工作：（1）函数[[scope]]属性创建作用域链
+4. （2）函数创建时初始化变量对象AO
+5. （3）将活动对象压入checkscopr作用域链顶端。（到这里，checkscope作用域链完成）
+6. 执行函数中的代码，修改变量对象AO
+7. 执行完毕，出栈
+
+#### this
+简单来说，this就是属性或方法“当前”所在的对象。
+
+this的设计跟javascript的内存的数据结构有关（引用数据类型存在堆内存中），使得函数可以在不用的环境（上下文）中执行，所以需要一种机制来获得当前的运行环境。
+
+下面从调用场景的角度讲解 this 的几种用法。
+
+<img src='./images/this指向.jpg'>
+
+##### 1. 全局环境
+全局环境使用this，它指的就是顶层对象window
+
+```
+this === window // true
+
+function f() {
+  console.log(this === window);
+}
+f() // true
+```
+
+##### 2. 构造函数
+构造函数中的this，指的是实例对象。
+
+```
+var Obj = function (p) {
+  this.p = p
+}
+```
+
+由于this指向实例对象，所以在构造函数内部定义this.p，就相当于定义实例对象有一个 p 属性。
+
+##### 3. 对象的方法
+如果对象的方法里面包含this，this的指向就是方法运行时所在的对象。如果该方法赋值给另一个对象，就会改变 this 的指向。
+
+```
+var obj ={
+  foo: function () {
+    console.log(this)
+  }
+}
+
+obj.foo() // obj
+```
+
+但是下面几种用法都会改变this 的指向。
+
+```
+// 情况一
+(obj.foo = obj.foo)() // window
+// 情况二
+(false || obj.foo)() // window
+// 情况三
+(1, obj.foo)() // window
+```
+上面代码中，obj.foo就是一个值。这个值真正调用的时候，运行环境已经不是obj了，而是全局环境，所以this不再指向obj。
+
+可以这样理解，JavaScript 引擎内部，obj和obj.foo储存在两个内存地址，称为地址一和地址二。obj.foo()这样调用时，是从地址一调用地址二，因此地址二的运行环境是地址一，this指向obj。但是，上面三种情况，都是直接取出地址二进行调用，这样的话，运行环境就是全局环境，因此this指向全局环境。上面三种情况等同于下面的代码。
+
+```
+// 情况一
+(obj.foo = function () {
+  console.log(this);
+})()
+// 等同于
+(function () {
+  console.log(this);
+})()
+
+// 情况二
+(false || function () {
+  console.log(this);
+})()
+
+// 情况三
+(1, function () {
+  console.log(this);
+})()
+```
+
+##### 4. call、apply、bind
+
+1. func.call(thisValue, arg1, arg2, ...)
+
+call的第一个参数就是this所要指向的那个对象，后面的参数则是函数调用时所需的参数。
+
+call方法的参数，应该是一个对象。如果参数为空、null和undefined，则默认传入全局对象。
+
+2. func.apply(thisValue, [arg1, arg2, ...])
+
+apply方法的第一个参数也是this所要指向的那个对象，如果设为null或undefined，则等同于指定全局对象。
+
+第二个参数则是一个数组，该数组的所有成员依次作为参数，传入原函数。原函数的参数，在call方法中必须一个个添加，但是在apply方法中，必须以数组形式添加。
+
+3. bind()方法用于将函数体内的this绑定到某个对象，然后返回一个新函数。
+
+##### 5.箭头函数
+
+箭头函数中this比较特殊,箭头函数this为父作用域的this，不是调用时的this。
+
+要知道前四种方式,都是调用时确定,也就是动态的。
+
+而箭头函数的this指向是静态的,声明的时候就确定了下来；
+
+#### 思考题
+```
+var scope = "global scope";
+function checkscope(){
+    var scope = "local scope";
+    function f(){
+        return scope;
+    }
+    return f();
+}
+checkscope();
+```
+
+```
+var scope = "global scope";
+function checkscope(){
+    var scope = "local scope";
+    function f(){
+        return scope;
+    }
+    return f;
+}
+checkscope()();
+```
+
+两段代码都会打印 local scope，但是可以从执行上下文的角度分析具体有哪些不同吗？
+
+<a href='https://github.com/mqyqingfeng/Blog/issues/8'>冴羽-JavaScript深入之执行上下文</a><br>
+
+#### 闭包
+ECMAScript中，闭包指的是：
+
+1. 从理论角度：所有的函数。因为它们都在创建的时候就将上层上下文的数据保存起来了。哪怕是简单的全局变量也是如此，因为函数中访问全局变量就相当于是在访问自由变量，这个时候使用最外层的作用域。
+   
+2. 从实践角度：以下函数才算是闭包：
+   
+* 即使创建它的上下文已经销毁，它仍然存在（比如，内部函数从父函数中返回）
+* 在代码中引用了自由变量
+
+我们从下面这个例子入手：
+
+```
+var scope = "global scope";
+function checkscope(){
+    var scope = "local scope";
+    function f(){
+        return scope;
+    }
+    return f;
+}
+
+var foo = checkscope();
+foo();
+```
+
+简要的执行过程：
+
+1. 进入全局代码，创建全局执行上下文，全局执行上下文压入执行上下文栈
+2. 全局执行上下文初始化
+3. 执行 checkscope 函数，创建 checkscope 函数执行上下文，checkscope 执行上下文被压入执行上下文栈
+4. checkscope 执行上下文初始化，创建变量对象、作用域链、this等
+5. checkscope 函数执行完毕，checkscope 执行上下文从执行上下文栈中弹出
+6. 执行 f 函数，创建 f 函数执行上下文，f 执行上下文被压入执行上下文栈
+7. f 执行上下文初始化，创建变量对象、作用域链、this等
+8. f 函数执行完毕，f 函数上下文从执行上下文栈中弹出
+
+如果对前面的执行上下文很好的理解了，那么我们可以知道f执行上下文维护了一个作用域链。
+```
+fContext=[
+    Scope:[AO,checkscopeContext.Ao,golbalContext.VO]
+]
+```
+
+这里有一个类似思路的例子：
+
+<img src='./images/闭包.jpg'>
+
+就是因为这个作用域链，f 函数依然可以读取到 checkscopeContext.AO 的值，说明当 f 函数引用了 checkscopeContext.AO 中的值的时候，即使 checkscopeContext 被销毁了，但是 JavaScript 依然会让 checkscopeContext.AO 活在内存中，f 函数依然可以通过 f 函数的作用域链找到它，正是因为 JavaScript 做到了这一点，从而实现了闭包这个概念。
+
+```
+//面试常考：
+var data = [];
+for (var i = 0; i < 3; i++) {
+  data[i] = function () {
+    console.log(i);
+  };
+}
+
+data[0]();
+data[1]();
+data[2]();
+//答案都是3，试着用执行上下文的思路回答
+```
+
+改成闭包
+
+```
+var data = [];
+for (var i = 0; i < 3; i++) {
+  data[i] = (function (i) {
+        return function(){
+            console.log(i);
+        }
+  })(i);
+}
+
+data[0]();
+data[1]();
+data[2]();
+```
+
+#### 参考
+
+<a href='https://wangdoc.com/javascript/oop/this.html'>阮一峰-javascript教程--this关键字</a><br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/3'>冴羽-JavaScript深入之词法作用域和动态作用域</a><br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/4'>冴羽-JavaScript深入之执行上下文栈</a><br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/5'>冴羽-JavaScript深入之变量对象</a><br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/6'>冴羽-JavaScript深入之作用域链</a><br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/7'>冴羽-JavaScript深入之从ECMAScript规范解读this</a><br>
+（虽然我这里this不是参考的冴羽大佬的文章，但是还是推荐从规范的角度解读this）<br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/8'>冴羽-JavaScript深入之执行上下文</a><br>
+<a href='https://github.com/mqyqingfeng/Blog/issues/9'>冴羽-JavaScript深入之闭包</a><br>
+
+### 3.原型、对象的创建和继承
 
 #### 原型和原型链
 
@@ -591,6 +1121,14 @@ var person1=new Person('kevin')
 //优点：解决了上面所讲的，每个方法都要被重新创建的问题
 //没有封装性可言，当对象需要很多方法时，需要定义多个全局对象
 ```
+
+> new 操作符做了什么：
+> 1. 创建了一个新对象
+> 2. 将构造函数的作用域赋给了新对象（因此 this 就指向了这个新对象）
+> 3. 执行构造函数中的代码（为这个新对象添加属性）
+> 4. 返回新对象
+> 5. 将构造函数的prototype关联到实例的__proto__
+> 
 
 ##### 3. 原型模式
 ```
@@ -671,7 +1209,7 @@ var person2=Person('b')
 person1.getName()   //报错，没有该方法
 person2.getName()   //注释掉上面的代码的话，可以执行
 ```
-> 解释：调用构造函数时会为实例添加一个指向最初原型的prototype指针，而把原型修改为另一个对象就切断了构造函数和最初原型之间的联系。
+> 解释：调用构造函数时会为实例添加一个指向最初原型的prototype指针，而把原型修改为另一个对象就切断了构造函数和最初原型之间的联系。(留坑，等执行上下文)
 > 
 > <img src='./images/重写原型对象.jpg'>
 

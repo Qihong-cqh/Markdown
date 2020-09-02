@@ -2,10 +2,10 @@
 
 框架参考：
 //https://juejin.im/post/6844904116339261447
-1. 数据类型以及转换、判断
-2. 执行上下文--闭包、作用域链
+1. 数据类型、转换、隐式转换、判断
+2. 执行上下文--作用域链、变量对象、this、闭包
 3. this指向--call、apply、bind
-4. 原型/对象--创建、继承
+4. 原型、对象的创建和继承
 5. 事件循环--eventloop
 6. es6 增强语法、模块化
 7. 异步流程：promise、settimeout、settimeinterval
@@ -49,7 +49,7 @@ alert(typeof a)   //undefined
 ##### Boolean
 只有 false 和 true（只有小写），可以使用Boolean()将其他数据类型转换为boolean值。
 
-调用Boolean()转换规则：
+调用Boolean()转换规则：（“有东西”就为true）
 |数据类型|结果|
 |----|----|
 |Number|除了0 和 NaN 都为true|
@@ -166,7 +166,7 @@ alert(num.toString(10)); // "10"
 alert(num.toString(16)); // "a"
 ```
 
-2. String()
+2. String()--“有啥返回啥的字符串形式（对象是[Object Object])”
 
 * 如果值有toString()方法，则调用该方法(无参数)并返回相应的结果。
 * 如果是 null，则返回“null”
@@ -183,8 +183,8 @@ Object的每个实例都具有下列属性和方法
 * isPrototypeOf(object)：用于检查传入的对象是否是传入对象的原型。
 * propertyIsEnumerable(propertyName)：用于检查给定的属性是否能够使用 for-in 语句来枚举。
 * toLocaleString()：返回对象的字符串表示，该字符串与执行环境的地区对应。
-* toString()：返回对象的字符串表示
-* valueOf()：返回对象的字符串、数值或布尔值表示。通常与 toString()方法的返回值相同。
+* toString()：对象的字符串形式，默认情况下返回类型字符串。Object.prototype.toString.call(value)可以用来判断一个值的类型
+* valueOf()：返回对象的字符串、数值或布尔值表示（返回对象的“值”）。通常与 toString()方法的返回值相同。
 
 <img src='./images/tostring和valueof转换.jpg'>
 
@@ -203,9 +203,11 @@ Object的每个实例都具有下列属性和方法
 > 
 > 2. 存放在栈区：按值访问，可以直接操作保存在变量中实际的值，占据空间小，大小固定
 > 
-> 3. 值的比较：
-> * == ：只进行值的比较，会进行数据类型转换
-> * === ：不会转换数据类型
+> 3. 值的复制：
+> 
+> 一个变量复制另一个基本类型的值，只是拷贝了该对象的值，但是两个变量完全独立，可以参加任何操作而不会互相影响。
+> 
+> <img src='./images/复制基本数据类型.jpg'>
 
 > 引用数据类型
 > 
@@ -213,7 +215,11 @@ Object的每个实例都具有下列属性和方法
 > 
 > 2. 同时存放在栈内存和堆内存：应用数据类型在栈中存放了指针，该指针指向堆中该实体的起始地址。当解释器寻找引用值时，会首先检索其在栈中的地址，取得地址后从堆中获得实体。
 > 
-> 3. 值的复制：当从一个变量向另一个变量赋引用类型的值时，只是存储了一个指向堆内存中相同对象的指针。
+> 3. 值的复制：
+> 
+> 当从一个变量向另一个变量赋引用类型的值时，只是存储了一个指向堆内存中相同对象的指针,复制结束后，两个变量实际上引用的是同一个对象，因此，改变其中一个变量，会影响另一个变量。
+> 
+> <img src='./images/复制引用数据类型.jpg'>
 
 ##### Javascript的内置对象
 
@@ -223,7 +229,7 @@ Object的每个实例都具有下列属性和方法
 javascript中类型转换(显性)只有三种情况：
 ##### 1. 转换为Boolean--Boolean()
 
-调用Boolean()转换规则：
+调用Boolean()转换规则：（“有东西”就为true）
 
 |数据类型|结果|
 |----|----|
@@ -246,7 +252,7 @@ javascript中类型转换(显性)只有三种情况：
 
 ##### 3. 转换为String--toString()/String()
 
-调用 String()转换规则：
+调用 String()转换规则--“有啥返回啥的字符串形式（对象是[object Object])”
 
 |数据类型|结果|
 |----|----|
@@ -254,13 +260,14 @@ javascript中类型转换(显性)只有三种情况：
 |Boolean|调用toString()|
 |Function|调用toString()|
 |Symbol|调用toString()|
-|Object|"[Object Object]"|
+|Object|"[object Object]"|
 |undefined |"undefined"|
 |null|"null"|
 
 #### 数据类型的隐式转换
+隐式转换离不开显式转换的规则，大体上需要看这种隐式转换需要的结果是Boolean、Number还是String，在根据前面的规则转换。
 
-##### 1. 递增递减操作符
+##### 1. 递增递减操作符--Number()规则再 +/-
 
 |操作对象|结果|
 |---|---|
@@ -286,7 +293,7 @@ f--     //0.10000000000000009 由于浮点数舍入错误
 o--     //-2
 ```
 
-##### 2. 一元 +/- 操作符
+##### 2. 一元 +/- 操作符--Number()规则
 在对非数值应用一元 +/- 操作符时，该操作符会像Number()一样对这个值进行转换。一元 - 操作符主要用于表示负数，会在转换后将数值变为负值。
 
 为了方便理解，这里直接将Number()的规则搬来：
@@ -326,7 +333,7 @@ f = -f      //-1.1
 o = -o      //1
 ```
 
-##### 3. ！操作符/!!操作符
+##### 3. ！操作符/!!操作符--Boolean()规则
 ！操作符会将它的操作数转换为一个布尔值，然后再取反
 
 |操作对象|结果|
@@ -357,7 +364,7 @@ alert(!!"")     //false
 alert(!!1234)   //true
 ```
 
-##### 4. 加法操作符 +
+##### 4. 加法操作符 + --当两边的数据类型不同时，运用String()规则
 
 |操作对象|结果|
 |---|---|
@@ -378,7 +385,7 @@ var msg="result is "+(num1+num2)
 alert(msg)      //result is 15
 ```
 
-##### 5. 减法操作符 -
+##### 5. 减法操作符 - --当两边的数据类型不同时，运用Number()规则
 
 |操作对象|结果|
 |---|---|
@@ -392,11 +399,13 @@ var res3=5-3        //2
 var res4=5-''       //5
 var res5=5-'2'      //3
 var res6=5-null     //5
+var res7='a'-1      //NaN
+var res8='a'-'b'    //NaN
 ```
 
 ##### 6. 相等和不相等 全等和不全等
 
-1. 相等和不相等
+1. 相等和不相等 --普通情况下运用的是Number()规则
 
 |操作对象|结果|
 |---|---|
@@ -421,17 +430,18 @@ true == 2           //false
 undefined == 0      //false
 null == 0           //false
 '5' == 5            //true
+true == 'true'      //false,true变为1，‘true’变为NaN，不相等
 ```
 
 2. 全等和不全等
 
 严格比较两个操作数，需要完全相等（数据类型也相等），不进行数据类型的转换。
 
-##### 7. 其他隐式转换
+##### 7. 其他隐式转换--根据需要转换成什么数据类型进行判断
 
-* 小于、大于、小于等于、大于等于
-* 三元运算符
-* if 条件判断
+* 小于、大于、小于等于、大于等于--运用Number()规则比较多，当两边都为字符串，则根据字符串的编码值进行判断。
+* 三元运算符--Boolean()
+* if 条件判断--Boolean()
 
 #### 数据类型的判断
 typeof、instanceof、constructor、Object.prototype.toString.call() 是比较常用的四种方法
@@ -450,7 +460,7 @@ console.log(typeof null)        //object
 ```
 
 ##### 2. instanceof
-typeof 对于对象来首，除了函数都会显示object，所以说typeof并不能准备判断对象的类型。这时可以考虑使用instanceof，它的内部机制是通过判断对象的原型链中能否找到类型的prototype。
+typeof 对于对象来说，除了函数都会显示object，所以说typeof并不能准备判断对象的类型。这时可以考虑使用instanceof，它的内部机制是通过判断对象的原型链中能否找到类型的prototype。
 
 ```
 console.log(2 instanceof Number);               // false，2不是Number的实例
@@ -483,25 +493,27 @@ console.log(({}).constructor === Object); // true
 ```
 var a = Object.prototype.toString;
  
-console.log(a.call(2));
-console.log(a.call(true));
-console.log(a.call('str'));
-console.log(a.call([]));
-console.log(a.call(function(){}));
-console.log(a.call({}));
-console.log(a.call(undefined));
-console.log(a.call(null));
+console.log(a.call(2));         //[object Number]
+console.log(a.call(true));      //[object Boolean]
+console.log(a.call('str'));     //[object String]
+console.log(a.call([]));        //[object Array]
+console.log(a.call(function(){}));      //[object Function]
+console.log(a.call({}));        //[object Object]
+console.log(a.call(undefined)); //[object Undefined]
+console.log(a.call(null));      //[object Null]
 ```
 
 ##### 5. 其他判断方式
 * Object.is(a,b) 判断a，b 是否完全相等，与 === 基本相同，但是会判断+0不等于-0，NaN等于NaN
 * isPrototypeOf() 判断原型
 * isNaN() 是否为NaN
+* Array.isArray() 判断数组
 
 #### 参考
 
 <a href='https://juejin.im/post/6844903990904225805'>「前端料包」可能是最透彻的JavaScript数据类型详解</a><br>
 
+### 2.执行上下文--作用域链、变量对象、this、闭包
 
 ### 4.原型、对象的创建和继承
 

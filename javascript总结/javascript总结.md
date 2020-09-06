@@ -2,16 +2,18 @@
 
 框架参考：
 //https://juejin.im/post/6844904116339261447
-1. 数据类型、转换、隐式转换、判断       get
-2. 执行上下文--作用域、作用域链、变量对象、this、闭包   get
-3. 原型、对象的创建和继承               get
-三种事件模型、事件循环--eventloop
-javascript垃圾回收、v8引擎垃圾回收
-es6 增强语法、模块化--let/const/var 
-异步流程：promise、settimeout、settimeinterval、generator、await/async
-dom事件、bom事件
-正则    --阮一峰
-ajax
+1. 数据类型、转换、隐式转换、判断       
+2. 执行上下文--作用域、作用域链、变量对象、this、闭包   
+3. 原型、对象的创建和继承               
+
+事件循环--eventloop （小知识点）
+
+javascript垃圾回收、v8引擎垃圾回收 （小知识点）
+
+异步流程：{
+    promise、settimeout、settimeinterval、generator、await/async
+}
+
 手写代码：{
     深浅拷贝，
     promise、await、async
@@ -19,8 +21,19 @@ ajax
     new
     柯里化
     sleep
+    ajax
     冴羽大佬专题
 }
+
+es6 增强语法：{
+let/const/var、模板字符串、箭头函数、set、map、Iterator/for of、class、模块化
+}
+
+api总结：{
+    数组、字符串、object、bom、dom、其他重要方法
+}（不急）
+
+正则    --阮一峰es5、es6,放在参考里面就好了。
 
 
 ### 1.数据类型、转换、隐式转换、判断
@@ -450,6 +463,8 @@ true == 'true'      //false,true变为1，‘true’变为NaN，不相等
 * 小于、大于、小于等于、大于等于--运用Number()规则比较多，当两边都为字符串，则根据字符串的编码值进行判断。
 * 三元运算符--Boolean()
 * if 条件判断--Boolean()
+* for() --Boolean()
+* || 和 &&--Boolean()
 
 #### 数据类型的判断
 typeof、instanceof、constructor、Object.prototype.toString.call() 是比较常用的四种方法
@@ -522,6 +537,8 @@ console.log(a.call(null));      //[object Null]
 <a href='https://juejin.im/post/6844903990904225805'>「前端料包」可能是最透彻的JavaScript数据类型详解</a><br>
 
 红宝书--Javascript高级程序设计第三版
+
+******
 
 ### 2.执行上下文--作用域、作用域链、变量对象、this、闭包
 
@@ -1045,6 +1062,8 @@ data[2]();
 <a href='https://github.com/mqyqingfeng/Blog/issues/8'>冴羽-JavaScript深入之执行上下文</a><br>
 <a href='https://github.com/mqyqingfeng/Blog/issues/9'>冴羽-JavaScript深入之闭包</a><br>
 
+******
+
 ### 3.原型、对象的创建和继承
 
 #### 原型和原型链
@@ -1204,12 +1223,13 @@ var person1=new Person()
 ```
 > 注意：不能用对象字面量重写原型，如下：
 ```
-var person1=Person('a')
-var person2=Person('b')
-person1.getName()   //报错，没有该方法
-person2.getName()   //注释掉上面的代码的话，可以执行
+Person.prototype={
+
+}
+//对比，上面用的是 Person.prototype.getName={...}
 ```
-> 解释：调用构造函数时会为实例添加一个指向最初原型的prototype指针，而把原型修改为另一个对象就切断了构造函数和最初原型之间的联系。(留坑，等执行上下文)
+> 解释：调用构造函数时会为实例添加一个指向最初原型的prototype指针，而把原型修改为另一个对象就切断了构造函数和最初原型之间的联系。
+> 简单来说，就是原本的 实例 指向 最初原型 ```__proto__```,但是 原型 被一个对象重写，相当于原型变了，原型 和 构造函数之间依然有prototype 和 constructor 联系，但是原本的 实例 的 ```__proto__``` 依然指向的是原来的 原型。
 > 
 > <img src='./images/重写原型对象.jpg'>
 
@@ -1442,4 +1462,1328 @@ prototype(Child,Parent)
 <a href='https://github.com/mqyqingfeng/Blog/issues/15'>JavaScript深入之创建对象的多种方式以及优缺点</a><br>
 <a href='https://github.com/mqyqingfeng/Blog/issues/16'>JavaScript深入之继承的多种方式和优缺点</a><br>
 
-### 
+******
+
+### 4.异步
+
+#### 任务队列和事件循环
+
+因为 js 是单线程运行的，在代码执行的时候，通过将不同函数的执行上下文压入执行栈中来保证代码的有序执行。在执行同步代码的时候，如果遇到了异步事件，js 引擎并不会一直等待其返回结果，而是会将这个事件挂起（异步的进入 Event Table 并注册函数），继续执行执行栈中的其他任务。当异步事件执行完毕后，再将异步事件对应的回调加入到与当前执行栈中不同的另一个任务队列中等待执行（Event Table 会将这个函数移入 Event Queue），主线程内的任务执行完毕为空，会去Event Queue读取对应的函数，进入主线程执行。上述过程会不断重复，也就是常说的Event Loop(事件循环)。
+
+<img src='./images/事件循环.jpg'>
+
+任务队列可以分为宏任务对列和微任务对列，当当前执行栈中的事件执行完毕后，js 引擎首先会判断微任务对列中是否有任务可以执行，如果有就将微任务队首的事件压入栈中执行。当微任务对列中的任务都执行完成后再去判断宏任务对列中的任务。
+
+微任务包括了 promise 的回调、node 中的 process.nextTick 、对 Dom 变化监听的 MutationObserver。
+
+宏任务包括了 script 脚本的执行、setTimeout ，setInterval ，setImmediate 一类的定时事件，还有如 I/O 操作、UI 渲染等。
+
+<img src='./images/宏任务和微任务.jpg'>
+
+讲的最清楚：<a href='https://juejin.im/post/6844903512845860872'>这一次，彻底弄懂 JavaScript 执行机制</a>
+
+#### 异步操作的模式
+##### 回调函数
+
+```
+function f1(callback){
+    ...
+    callback()
+}
+function f2(){
+    ...
+}
+f1(f2)
+```
+
+回调函数的优点是简单，容易理解和实现。缺点是不利于代码的阅读和维护，各个部分之间高度耦合，使得程序结构混乱、流程难以跟踪（尤其是多个回调函数嵌套），而且每个任务只能指定一个回调函数。
+
+##### 事件监听
+采用事件驱动模式，异步任务的执行不取决于代码的顺序，而是取决于某个事件是否发生。
+
+```
+//使用JQuery 写法
+f1.on('done', f2);
+function f1() {
+  setTimeout(function () {
+    // ...
+    f1.trigger('done');
+  }, 1000);
+}
+//这里表示，当执行完毕后，立即出发 done 事件，从而开始执行f2
+```
+
+这种方法的优点是比较容易理解，可以绑定多个事件，每个事件可以指定多个回调函数，而且可以“去耦合”（decoupling），有利于实现模块化。缺点是整个程序都要变成事件驱动型，运行流程会变得很不清晰。阅读代码的时候，很难看出主流程。
+
+##### 发布/订阅
+事件完全可以理解成“信号”，如果存在一个“信号中心”，某个任务执行完成，就向信号中心“发布”（publish）一个信号，其他任务可以向信号中心“订阅”（subscribe）这个信号，从而知道什么时候自己可以开始执行。这就叫做”发布/订阅模式”（publish-subscribe pattern），又称“观察者模式”（observer pattern）
+
+这种方法的性质与“事件监听”类似，但是明显优于后者。因为可以通过查看“消息中心”，了解存在多少信号、每个信号有多少订阅者，从而监控程序的运行。
+
+#### setTimeout()/setTimeInterval()
+setTimeout函数用来指定某个函数或某段代码，在多少毫秒之后执行。它返回一个整数，表示定时器的编号，以后可以用来取消这个定时器。
+
+setInterval函数的用法与setTimeout完全一致，区别仅仅在于setInterval指定某个任务每隔一段时间就执行一次，也就是无限次的定时执行。
+
+```
+var timerId = setTimeout(func|code, delay);
+```
+
+##### 需要注意的地方
+如果回调函数是对象的方法，那么setTimeout使得方法内部的this关键字指向全局环境，而不是定义时所在的那个对象。
+
+```
+var x = 1;
+
+var obj = {
+  x: 2,
+  y: function () {
+    console.log(this.x);
+  }
+};
+
+setTimeout(obj.y, 1000) // 1
+
+//解决方案1：
+setTimeout(function () {
+  obj.y();
+}, 1000);
+//解决方案2：
+setTimeout(obj.y.bind(obj), 1000)
+//解决方案3：使用箭头函数
+```
+
+##### 运行机制、setTimeout(f, 0)
+setTimeout和setInterval的运行机制，是将指定的代码移出本轮事件循环，等到下一轮事件循环，再检查是否到了指定时间。如果到了，就执行对应的代码；如果不到，就继续等待。
+
+其实在上面的 任务队列和事件循环 中我们就提到，setTimeout 和 setInterval 都是属于异步任务中的宏任务。
+
+setTimeout(f,0) 指的是在下一轮事件循环一开始就执行。
+
+
+#### Promise
+
+##### 概述
+Promise 对象是 JavaScript 的异步操作解决方案，为异步操作提供统一接口。它起到代理作用（proxy），充当异步操作与回调函数之间的中介，使得异步操作具备同步操作的接口。Promise 可以让异步操作写起来，就像在写同步操作的流程，而不必一层层地嵌套回调函数。
+
+```
+// 传统写法
+step1(function (value1) {
+  step2(value1, function(value2) {
+    step3(value2, function(value3) {
+      step4(value3, function(value4) {
+        // ...
+      });
+    });
+  });
+});
+
+// Promise 的写法
+(new Promise(step1))
+  .then(step2)
+  .then(step3)
+  .then(step4);
+```
+
+##### Promise对象的状态
+
+* 异步操作未完成（pending）
+* 异步操作成功（fulfilled）
+* 异步操作失败（rejected）
+
+其中，fulfilled 和 rejected 合在一起称为 resolved（已定型）
+
+三种状态的变化途径只有两种：
+
+* 从“未完成”到“成功”
+* 从“未完成”到“失败”
+
+因此，Promise 的最终结果只有两种。
+
+* 异步操作成功，Promise 实例传回一个值（value），状态变为fulfilled。
+* 异步操作失败，Promise 实例抛出一个错误（error），状态变为rejected。
+
+##### Promise 基本使用
+
+```
+const promise = new Promise(function(resolve, reject) {
+  // ... some code
+
+  if (/* 异步操作成功 */){
+    resolve(value);
+  } else {
+    reject(error);
+  }
+});
+```
+
+Promise实例生成以后，可以用then方法分别指定resolved状态和rejected状态的回调函数。
+
+```
+promise.then(function(value) {// success}, function(error) {// failure});
+```
+
+then方法可以接受两个回调函数作为参数。第一个回调函数是Promise对象的状态变为resolved时调用，第二个回调函数是Promise对象的状态变为rejected时调用。其中，第二个函数是可选的，不一定要提供。这两个函数都接受Promise对象传出的值作为参数。
+
+用Promise对象实现的 Ajax 操作的例子。
+```
+const getJSON = function(url) {
+  const promise = new Promise(function(resolve, reject){
+    const handler = function() {
+      if (this.readyState !== 4) {
+        return;
+      }
+      if (this.status === 200) {
+        resolve(this.response);
+      } else {
+        reject(new Error(this.statusText));
+      }
+    };
+    const client = new XMLHttpRequest();
+    client.open("GET", url);
+    client.onreadystatechange = handler;
+    client.responseType = "json";
+    client.setRequestHeader("Accept", "application/json");
+    client.send();
+
+  });
+
+  return promise;
+};
+
+getJSON("/posts.json").then(function(json) {
+  console.log('Contents: ' + json);
+}, function(error) {
+  console.error('出错了', error);
+});
+```
+
+##### Promise.prototype.then()
+then方法的第一个参数是resolved状态的回调函数，第二个参数（可选）是rejected状态的回调函数。
+
+then方法返回的是一个新的Promise实例（注意，不是原来那个Promise实例）。因此可以采用链式写法，即then方法后面再调用另一个then方法。
+
+这时，前一个回调函数，有可能返回的还是一个Promise对象（即有异步操作），这时后一个回调函数，就会等待该Promise对象的状态发生变化，才会被调用。
+
+```
+getJSON("/post/1.json").then(function(post) {
+  return getJSON(post.commentURL);
+}).then(function (comments) {
+  console.log("resolved: ", comments);
+}, function (err){
+  console.log("rejected: ", err);
+});
+```
+
+##### Promise.prototype.catch()
+Promise.prototype.catch()方法是.then(null, rejection)或.then(undefined, rejection)的别名，用于指定发生错误时的回调函数。
+
+如果状态变为 rejected ，就会调用catch() 中的回调函数，then() 方法运行中抛出错误，也会被catch() 捕获，Promise 抛出错误，也可以被捕获。
+
+Promise 对象的错误具有“冒泡”性质，会一直向后传递，直到被捕获为止。也就是说，错误总是会被下一个catch语句捕获。
+
+```
+getJSON('/posts.json').then(function(posts) {
+  // ...
+}).catch(function(error) {
+  // 处理 getJSON 和 前一个回调函数运行时发生的错误
+  console.log('发生错误！', error);
+});
+```
+
+##### Promise.prototype.finally()
+finally()方法用于指定不管 Promise 对象最后状态如何，都会执行的操作。
+
+finally方法的回调函数不接受任何参数。这表明，finally方法里面的操作，应该是与状态无关的，不依赖于 Promise 的执行结果。
+
+```
+Promise.then(result=>{...})
+.catch(error=>{...})
+.finally(()=>{...})
+```
+
+##### Promise.all()
+Promise.all()方法用于将多个 Promise 实例，包装成一个新的 Promise 实例。
+
+```
+const p = Promise.all([p1, p2, p3]);
+```
+
+p 的状态由p1、p2、p3决定：
+* 只有p1、p2、p3的状态都变成fulfilled，p的状态才会变成fulfilled，此时p1、p2、p3的返回值组成一个数组，传递给p的回调函数。
+* 只要p1、p2、p3之中有一个被rejected，p的状态就变成rejected，此时第一个被reject的实例的返回值，会传递给p的回调函数。
+
+##### Promise.race()
+Promise.race()方法同样是将多个 Promise 实例，包装成一个新的 Promise 实例。
+
+```
+const p = Promise.race([p1, p2, p3]);
+```
+上面代码中，只要p1、p2、p3之中有一个实例率先改变状态，p的状态就跟着改变。那个率先改变的 Promise 实例的返回值，就传递给p的回调函数。
+
+##### Promise.allSettled()
+Promise.allSettled()方法接受一组 Promise 实例作为参数，包装成一个新的 Promise 实例。只有等到所有这些参数实例都返回结果，不管是fulfilled还是rejected，包装实例才会结束。
+
+该方法返回的新的 Promise 实例，一旦结束，状态总是fulfilled，不会变成rejected。
+
+##### Promise.any()
+Promise.any()方法接受一组 Promise 实例作为参数，包装成一个新的 Promise 实例。只要参数实例有一个变成fulfilled状态，包装实例就会变成fulfilled状态；如果所有参数实例都变成rejected状态，包装实例就会变成rejected状态。
+
+Promise.any()跟Promise.race()方法很像，只有一点不同，就是不会因为某个 Promise 变成rejected状态而结束。
+
+##### Promise.resolve()
+有时需要将现有对象转为 Promise 对象，Promise.resolve()方法就起到这个作用。
+
+1. 参数是一个 Promise 实例
+
+如果参数是 Promise 实例，那么Promise.resolve将不做任何修改、原封不动地返回这个实例。
+
+2. 参数是一个thenable对象
+
+thenable对象指的是具有then方法的对象。Promise.resolve方法会将这个对象转为 Promise 对象，然后就立即执行thenable对象的then方法。
+
+```
+let thenable = {
+  then: function(resolve, reject) {
+    resolve(42);
+  }
+};
+
+let p1 = Promise.resolve(thenable);
+p1.then(function(value) {
+  console.log(value);  // 42
+});
+```
+
+3. 参数不是具有then方法的对象，或根本就不是对象
+
+如果参数是一个原始值，或者是一个不具有then方法的对象，则Promise.resolve方法返回一个新的 Promise 对象，状态为resolved。
+
+```
+const p = Promise.resolve('Hello');
+
+p.then(function (s){
+  console.log(s)
+});
+// Hello
+```
+
+4. 不带有任何参数
+
+```
+const p = Promise.resolve();
+
+p.then(function () {
+  // ...
+});
+//变量p就是一个 Promise 对象
+```
+
+需要注意的是，立即resolve()的 Promise 对象，是在本轮“事件循环”（event loop）的结束时执行，而不是在下一轮“事件循环”的开始时。
+
+```
+setTimeout(function () {
+  console.log('three');
+}, 0);
+
+Promise.resolve().then(function () {
+  console.log('two');
+});
+
+console.log('one');
+
+// one
+// two
+// three
+```
+
+
+#### Generator
+
+##### 基本概念
+Generator 函数有多种理解角度。语法上，首先可以把它理解成，Generator 函数是一个状态机，封装了多个内部状态。
+
+执行 Generator 函数会返回一个遍历器对象，也就是说，Generator 函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历 Generator 函数内部的每一个状态。
+
+```
+function* helloWorldGenerator() {
+  yield 'hello';
+  yield 'world';
+  return 'ending';
+}
+var hw = helloWorldGenerator();
+
+hw.next()       // { value: 'hello', done: false }
+hw.next()       // { value: 'world', done: false }
+hw.next()       // { value: 'ending', done: true }
+hw.next()       // { value: undefined, done: true }
+```
+
+##### yield 表达式
+遍历器对象的next方法的运行逻辑如下。
+1. 遇到yield表达式，就暂停执行后面的操作，并将紧跟在yield后面的那个表达式的值，作为返回的对象的value属性值。
+2. 下一次调用next方法时，再继续往下执行，直到遇到下一个yield表达式。
+3. 如果没有再遇到新的yield表达式，就一直运行到函数结束，直到return语句为止，并将return语句后面的表达式的值，作为返回的对象的value属性值。
+4. 如果该函数没有return语句，则返回的对象的value属性值为undefined。
+   
+
+##### 与 Iterator 接口的关系
+由于 Generator 函数就是遍历器生成函数，因此可以把 Generator 赋值给对象的Symbol.iterator属性，从而使得该对象具有 Iterator 接口。
+
+```
+var myIterable = {};
+myIterable[Symbol.iterator] = function* () {
+  yield 1;
+  yield 2;
+  yield 3;
+};
+
+[...myIterable] // [1, 2, 3]
+```
+
+##### next() 的参数
+yield表达式本身没有返回值，或者说总是返回undefined。next方法可以带一个参数，该参数就会被当作上一个yield表达式的返回值。
+
+通过next方法的参数，就有办法在 Generator 函数开始运行之后，继续向函数体内部注入值。也就是说，可以在 Generator 函数运行的不同阶段，从外部向内部注入不同的值，从而调整函数行为。
+
+```
+function* foo(x) {
+  var y = 2 * (yield (x + 1));
+  var z = yield (y / 3);
+  return (x + y + z);
+}
+
+var a = foo(5);
+a.next() // Object{value:6, done:false}
+a.next() // Object{value:NaN, done:false}
+a.next() // Object{value:NaN, done:true}
+
+var b = foo(5);
+b.next() // { value:6, done:false }
+b.next(12) // { value:8, done:false }
+b.next(13) // { value:42, done:true }
+```
+
+
+##### Generator.prototype.throw()
+Generator 函数返回的遍历器对象，都有一个throw方法，可以在函数体外抛出错误，然后在 Generator 函数体内捕获。
+
+```
+var g = function* () {
+  try {
+    yield;
+  } catch (e) {
+    console.log('内部捕获', e);
+  }
+};
+
+var i = g();
+i.next();
+
+try {
+  i.throw('a');
+  i.throw('b');
+} catch (e) {
+  console.log('外部捕获', e);
+}
+// 内部捕获 a
+// 外部捕获 b
+```
+
+throw方法可以接受一个参数，该参数会被catch语句接收，建议抛出Error对象的实例
+
+```
+var g = function* () {
+  try {
+    yield;
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+var i = g();
+i.next();
+i.throw(new Error('出错了！'));
+// Error: 出错了！(…)
+```
+
+##### Generator.prototype.return()
+Generator 函数返回的遍历器对象，还有一个return方法，可以返回给定的值，并且终结遍历 Generator 函数。
+
+```
+function* gen() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+
+var g = gen();
+
+g.next()        // { value: 1, done: false }
+g.return('foo') // { value: "foo", done: true }
+g.next()        // { value: undefined, done: true }
+```
+
+##### yield* 表达式
+ES6 提供了yield*表达式，用来在一个 Generator 函数里面执行另一个 Generator 函数。
+
+```
+function* bar() {
+  yield 'x';
+  yield* foo();
+  yield 'y';
+}
+
+// 等同于
+function* bar() {
+  yield 'x';
+  yield 'a';
+  yield 'b';
+  yield 'y';
+}
+
+// 等同于
+function* bar() {
+  yield 'x';
+  for (let v of foo()) {
+    yield v;
+  }
+  yield 'y';
+}
+
+for (let v of bar()){
+  console.log(v);
+}
+// "x"
+// "a"
+// "b"
+// "y"
+```
+
+yield*命令可以很方便地取出嵌套数组的所有成员。
+
+```
+function* iterTree(tree) {
+  if (Array.isArray(tree)) {
+    for(let i=0; i < tree.length; i++) {
+      yield* iterTree(tree[i]);
+    }
+  } else {
+    yield tree;
+  }
+}
+
+const tree = [ 'a', ['b', 'c'], ['d', 'e'] ];
+
+for(let x of iterTree(tree)) {
+  console.log(x);
+}
+// a
+// b
+// c
+// d
+// e
+
+[...iterTree(tree)] // ["a", "b", "c", "d", "e"]
+```
+
+
+#### async/await
+
+##### 简单介绍
+简单来说，async 就是 generator 的语法糖，先来看一个简单的例子
+
+```
+const fs = require('fs');
+
+const readFile = function (fileName) {
+  return new Promise(function (resolve, reject) {
+    fs.readFile(fileName, function(error, data) {
+      if (error) return reject(error);
+      resolve(data);
+    });
+  });
+};
+
+const gen = function* () {
+  const f1 = yield readFile('/etc/fstab');
+  const f2 = yield readFile('/etc/shells');
+  console.log(f1.toString());
+  console.log(f2.toString());
+};
+```
+
+可以用 async 函数写成：
+
+```
+const asyncReadFile = async function () {
+  const f1 = await readFile('/etc/fstab');
+  const f2 = await readFile('/etc/shells');
+  console.log(f1.toString());
+  console.log(f2.toString());
+};
+```
+
+async函数对 Generator 函数的改进，体现在以下四点：
+1. 内置执行器。
+2. 更好的语义
+3. 更广的适用性
+
+co模块约定，yield命令后面只能是 Thunk 函数或 Promise 对象，而async函数的await命令后面，可以是 Promise 对象和原始类型的值（数值、字符串和布尔值，但这时会自动转成立即 resolved 的 Promise 对象）。
+
+4. 返回值是 Promise 
+
+##### 基本用法
+async函数返回一个 Promise 对象，可以使用then方法添加回调函数。当函数执行的时候，一旦遇到await就会先返回，等到异步操作完成，再接着执行函数体内后面的语句。
+
+```
+async function getStockPriceByName(name) {
+  const symbol = await getStockSymbol(name);
+  const stockPrice = await getStockPrice(symbol);
+  return stockPrice;
+}
+
+getStockPriceByName('goog').then(function (result) {
+  console.log(result);
+});
+```
+
+有多种使用方法
+
+```
+// 函数声明
+async function foo() {}
+
+// 函数表达式
+const foo = async function () {};
+
+// 对象的方法
+let obj = { async foo() {} };
+obj.foo().then(...)
+
+// Class 的方法
+class Storage {
+  constructor() {
+    this.cachePromise = caches.open('avatars');
+  }
+
+  async getAvatar(name) {
+    const cache = await this.cachePromise;
+    return cache.match(`/avatars/${name}.jpg`);
+  }
+}
+
+const storage = new Storage();
+storage.getAvatar('jake').then(…);
+
+// 箭头函数
+const foo = async () => {};
+```
+
+##### 语法
+1. 返回一个 Promise 对象
+
+async函数内部return语句返回的值，会成为then方法回调函数的参数。
+
+```
+async function f() {
+  return 'hello world';
+}
+
+f().then(v => console.log(v))
+// "hello world"
+```
+
+2. Promise 对象的状态变化
+
+async函数返回的 Promise 对象，必须等到内部所有await命令后面的 Promise 对象执行完，才会发生状态改变，除非遇到return语句或者抛出错误。也就是说，只有async函数内部的异步操作执行完，才会执行then方法指定的回调函数。
+
+3. await 命令
+
+正常情况下，await命令后面是一个 Promise 对象，返回该对象的结果。如果不是 Promise 对象，就直接返回对应的值。
+
+```
+async function f() {
+  // 等同于
+  // return 123;
+  return await 123;
+}
+
+f().then(v => console.log(v))
+// 123
+```
+
+另一种情况是，await命令后面是一个thenable对象（即定义了then方法的对象），那么await会将其等同于 Promise 对象。
+
+4. 错误处理
+
+如果await后面的异步操作出错，那么等同于async函数返回的 Promise 对象被reject。
+
+防止出错的方法，也是将其放在try...catch代码块之中。
+
+```
+async function f() {
+  try {
+    await new Promise(function (resolve, reject) {
+      throw new Error('出错了');
+    });
+  } catch(e) {
+  }
+  return await('hello world');
+}
+```
+
+##### 使用注意点
+1. await命令后面的Promise对象，运行结果可能是rejected，所以最好把await 命令放在try...catch 代码块中。
+
+```
+async function myFunction() {
+  try {
+    await somethingThatReturnsAPromise();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// 另一种写法
+
+async function myFunction() {
+  await somethingThatReturnsAPromise()
+  .catch(function (err) {
+    console.log(err);
+  });
+}
+```
+
+2. 多个await命令后面的异步操作，如果不存在继发关系，最好让它们同时触发。
+
+```
+// 写法一
+let [foo, bar] = await Promise.all([getFoo(), getBar()]);
+
+// 写法二
+let fooPromise = getFoo();
+let barPromise = getBar();
+let foo = await fooPromise;
+let bar = await barPromise;
+```
+
+上面两种写法，getFoo和getBar都是同时触发，这样就会缩短程序的执行时间。
+
+3. await命令只能用在async函数之中，如果用在普通函数，就会报错。
+
+如果将forEach方法的参数改成async函数，也有问题。
+
+```
+function dbFuc(db) { //这里不需要 async
+  let docs = [{}, {}, {}];
+
+  // 可能得到错误结果
+  docs.forEach(async function (doc) {
+    await db.post(doc);
+  });
+}
+```
+
+上面代码可能不会正常工作，原因是这时三个db.post操作将是并发执行，也就是同时执行，而不是继发执行。
+
+继发执行的正确写法是采用for循环 或者使用数组的 reduce 方法
+
+```
+async function dbFuc(db) {
+  let docs = [{}, {}, {}];
+
+  for (let doc of docs) {
+    await db.post(doc);
+  }
+
+  //或者使用数组的 reduce
+  await docs.reduce(async (_, doc) => {
+    await _;
+    await db.post(doc);
+  }, undefined);
+}
+```
+
+如果希望多个请求并发执行，可以使用 Promise.all 方法。当三个请求都会resolved时，下面两种写法效果相同。
+
+```
+async function dbFuc(db) {
+  let docs = [{}, {}, {}];
+  let promises = docs.map((doc) => db.post(doc));
+
+  let results = await Promise.all(promises);
+  console.log(results);
+}
+
+// 或者使用下面的写法
+
+async function dbFuc(db) {
+  let docs = [{}, {}, {}];
+  let promises = docs.map((doc) => db.post(doc));
+
+  let results = [];
+  for (let promise of promises) {
+    results.push(await promise);
+  }
+  console.log(results);
+}
+```
+
+
+4. async 函数可以保留运行堆栈。
+
+```
+const a = async () => {
+  await b();
+  c();
+};
+```
+
+上面代码中，b()运行的时候，a()是暂停执行，上下文环境都保存着。一旦b()或c()报错，错误堆栈将包括a()。
+
+
+
+##### async VS Promise VS  Generator
+
+假设有一个例子，假定某个 DOM 元素上面，部署了一系列的动画，前一个动画结束，才能开始后一个。如果当中有一个动画出错，就不再往下执行，返回上一个成功执行的动画的返回值。
+
+1. Promise
+
+```
+function chainAnimationsPromise(elem, animations) {
+
+  // 变量ret用来保存上一个动画的返回值
+  let ret = null;
+
+  // 新建一个空的Promise
+  let p = Promise.resolve();
+
+  // 使用then方法，添加所有动画
+  for(let anim of animations) {
+    p = p.then(function(val) {
+      ret = val;
+      return anim(elem);
+    });
+  }
+
+  // 返回一个部署了错误捕捉机制的Promise
+  return p.catch(function(e) {
+    /* 忽略错误，继续执行 */
+  }).then(function() {
+    return ret;
+  });
+
+}
+```
+虽然 Promise 的写法比回调函数的写法大大改进，但是一眼看上去，代码完全都是 Promise 的 API（then、catch等等），操作本身的语义反而不容易看出来。
+
+2. Generator
+
+```
+function chainAnimationsGenerator(elem, animations) {
+
+  return spawn(function*() {
+    let ret = null;
+    try {
+      for(let anim of animations) {
+        ret = yield anim(elem);
+      }
+    } catch(e) {
+      /* 忽略错误，继续执行 */
+    }
+    return ret;
+  });
+
+}
+```
+上面代码使用 Generator 函数遍历了每个动画，语义比 Promise 写法更清晰，用户定义的操作全部都出现在spawn函数的内部。这个写法的问题在于，必须有一个任务运行器，自动执行 Generator 函数，上面代码的spawn函数就是自动执行器，它返回一个 Promise 对象，而且必须保证yield语句后面的表达式，必须返回一个 Promise。
+
+3. async
+
+```
+async function chainAnimationsAsync(elem, animations) {
+  let ret = null;
+  try {
+    for(let anim of animations) {
+      ret = await anim(elem);
+    }
+  } catch(e) {
+    /* 忽略错误，继续执行 */
+  }
+  return ret;
+}
+```
+
+可以看到 Async 函数的实现最简洁，最符合语义，几乎没有语义不相关的代码。它将 Generator 写法中的自动执行器，改在语言层面提供，不暴露给用户，因此代码量最少。如果使用 Generator 写法，自动执行器需要用户自己提供。
+
+
+
+******
+
+### 5.ECMAScript6 新特性(待填坑...)---模块化
+https://juejin.im/post/6844903959283367950
+#### 1.let const var
+
+1. 声明的变量值在声明时代的代码块有效（块级作用域）
+2. 不存在变量提升
+3. 不允许重复声明，会报错
+4. 存在暂时性死区，如果在变量声明前使用会报错
+
+#### 解构赋值
+#### 模板字符串
+#### 拓展运算符 ...
+#### for in vs for of （Iterator）
+#### 箭头函数
+#### 正则 --占坑
+#### set map
+#### class
+#### 模块化
+
+
+******
+
+### 6.手写代码：
+
+#### 1.实现数组的随机排序（乱序）
+
+```
+1. 使用数组sort方法，让 Math.random() 出来的数与 0.5 比较，如果大于就返回 1 交换位置，如果小于就返回 -1，不交换位置。
+但是因为sort是依次比较的，所以数组不是完全的随机。
+
+function randomSort(a,b){
+    return Math.random()>0.5?-1:1;
+}
+
+2. 随机从原数组抽取一个数，加入到新数组
+function randomSort(arr){
+    var result=[]
+    while(arr.length>0){
+        var randomIndex=Math.floor(Math.random()*arr.length)
+        result.push(arr[randomIndex])
+        arr.splice(randomIndex,1)
+    }
+    return result
+}
+
+3. 随机交换数组内的元素
+function randomSort(arr){
+    var index,randomIndex,temp,len=arr.length;
+
+    for(index=0;index<len;index++){
+        randomIndex=Math.floor(Math.random()*(len-index)+index)
+
+        temp=arr[index]
+        arr[index]=arr[randomIndex]
+        arr[randomIndex]=temp
+        //使用es6 语法
+        //[arr[index],arr[randomIndex]]=[arr[randomIndex],arr[index]]
+    }
+    return arr
+}
+```
+
+#### 2.instanceof
+
+```
+function myInstanceof(left,right){
+    let proto=Object.getPrototypeOf(left)   // 获取对象的原型
+    prototype=right.prototype           // 获取构造函数的 prototype 对象
+
+    while(true){    // 判断构造函数的 prototype 对象是否在对象的原型链上
+        if(!proto)  return false
+        if(proto===prototype)   return true
+
+        proto=Object.getPrototypeOf(proto)
+    }
+}
+```
+
+#### 3.new 操作符
+（1）首先创建了一个新的空对象
+（2）设置原型，将对象的原型设置为函数的 prototype 对象。
+（3）让函数的 this 指向这个对象，执行构造函数的代码（为这个新对象添加属性）
+（4）判断函数的返回值类型，如果是值类型，返回创建的对象。如果是引用类型，就返回这个引用类型的对象。
+
+```
+//使用：objectFactory(构造函数, 初始化参数);
+function objectFactory(){
+    var obj = {};
+    //取得该方法的第一个参数(并删除第一个参数)，该参数是构造函数
+    var Constructor = [].shift.apply(arguments);
+    //将新对象的内部属性__proto__指向构造函数的原型，这样新对象就可以访问原型中的属性和方法
+    obj.__proto__ = Constructor.prototype;
+    //取得构造函数的返回值
+    var ret = Constructor.apply(obj, arguments);
+    //如果返回值是一个对象就返回该对象，否则返回构造函数的一个实例对象
+    return typeof ret === "object" ? ret : obj;
+}
+```
+
+#### 4.ajax 
+
+1.创建 XMLHttpRequest 对象，也就是创建一个异步调用对象
+2.创建一个新的 HTTP 请求，并指定该 HTTP 请求的方法、URL 及验证信息
+3.设置响应 HTTP 请求状态变化的函数
+4.发送 HTTP 请求
+5.获取异步调用返回的数据
+6.使用 JavaScript 和 DOM 实现局部刷新
+
+```
+//最简单版：
+//1：创建Ajax对象
+var xhr = window.XMLHttpRequest?new XMLHttpRequest():new ActiveXObject('Microsoft.XMLHTTP');// 兼容IE6及以下版本
+//2：配置 Ajax请求地址
+xhr.open('get','index.xml',true);
+//3：发送请求
+xhr.send(null); // 严谨写法
+//4:监听请求，接受响应
+xhr.onreadysatechange=function(){
+     if(xhr.readySate==4&&xhr.status==200 || xhr.status==304 )
+          console.log(xhr.responsetXML)
+}
+
+//------------------------
+//一般实现：
+const SERVER_URL='/server'
+let xhr=new XMLHTTPRequest()
+
+xhr.open('GET',SERVER_URL,true) //创建http请求
+
+xhr.onreadystatechange=function(){   //设置状态监听函数
+    if(this.readyState !==4 ) return 
+
+    if(this.status === 200){       //当请求成功时
+        handle(this.response)
+    }else {
+        console.error(this.statusText)
+    }
+}
+xhr.onerror=function(){         //设置失败时的监听函数
+    console.error(this.statusText)
+}
+xhr.responseType='json'         //设置请求头信息
+xhr.setRequestHeader('Accept','application/json')
+
+xhr.send(null)              //发送http请求
+
+//----------------------
+//promise 封装实现：
+function getJSON(){
+    let promise=new Promise(function(resolve,reject){
+        let xhr=new XMLHttpRequest()
+        
+        xhr.open("GET",url,true)        //新建一个http请求
+
+        xhr.onreadystatechange=function(){      //设置状态的监听函数
+            if(this.readyState !==4) return 
+
+            if(this.status === 200){    //请求成功或失败时，改变promise的状态
+                resolve(this.response)
+            }else {
+                reject(new Error(this.statusText))
+            }
+        }
+
+        xhr.onerror=function(){     //设置错误监听函数
+            reject(new Error(this.statusText))
+        }
+        xhr.responseType='json'     //设置响应的数据类型
+        xhr.setRequestHeader("Accept","application/json")   //设置请求头信息
+    
+        xhr.send(null)      //发送http请求
+    })
+    return promise
+}
+
+```
+
+#### 5.javascript类型判断函数
+
+```
+function getType(value){
+    if(value===null){       // 判断数据是 null 的情况
+        return value+""
+    }
+
+    if(typeof value === "object"){      // 判断数据是引用类型的情况
+        let valueClass = Object.prototype.toString.call(value)
+        type=valueClass.split(' ')[1].split('')
+
+        type.pop()
+
+        return type.join('').toLowerCase()
+    }else{          // 判断数据是基本数据类型的情况和函数的情况
+        return typeof value
+    }
+}
+```
+
+#### 6.函数节流和防抖
+// 函数防抖： 在事件被触发 n 秒后再执行回调，如果在这 n 秒内事件又被触发，则重新计时。
+
+// 函数节流： 规定一个单位时间，在这个单位时间内，只能有一次触发事件的回调函数执行，如果在同一个单位时间内某事件被触发多次，只有一次能生效。
+
+函数防抖是指在事件被触发 n 秒后再执行回调，如果在这 n 秒内事件又被触发，则重新计时。这可以使用在一些点击请求的事件上，避免因为用户的多次点击向后端发送多次请求。
+
+函数节流是指规定一个单位时间，在这个单位时间内，只能有一次触发事件的回调函数执行，如果在同一个单位时间内某事件被触发多次，只有一次能生效。节流可以使用在 scroll 函数的事件监听上，通过事件节流来降低事件调用的频率。
+
+```
+//防抖
+function debounce(fn,wait){
+    var timer=null
+
+    return function(){
+        var context=this,
+        args=arguments
+
+        if(timer){
+            clearTimeout(timer)
+            timer=null
+        }
+
+        timer=setTimeout(()=>{
+            fn.apply(context,args)
+        },wait)
+    }
+}
+
+//节流
+function throttle(fn,delay){
+    var preTime=Date.now()
+    
+    return function(){
+        var context=this,
+        args=arguments,
+        nowTime=Date.now()
+
+        if(nowTime-preTime >= delay){
+            preTime=Date.now()
+            return fn.apply(context,args)
+        }
+    }
+}
+```
+
+#### 7.深浅拷贝
+
+浅拷贝指的是将一个对象的属性值复制到另一个对象，如果有的属性的值为引用类型的话，那么会将这个引用的地址复制给对象，因此两个对象会有同一个引用类型的引用。浅拷贝可以使用  Object.assign 和展开运算符来实现。
+
+深拷贝相对浅拷贝而言，如果遇到属性值为引用类型的时候，它新建一个引用类型并将对应的值复制给它，因此对象获得的一个新的引用类型而不是一个原有类型的引用。深拷贝对于一些对象可以使用 JSON 的两个函数来实现，但是由于 JSON 的对象格式比 js 的对象格式更加严格，所以如果属性值里边出现函数或者 Symbol 类型的值时，会转换失败。
+
+```
+//浅拷贝
+function shallowCopy(object){
+    if(!object || typeof object !== "object"){
+        return
+    }
+    let newObject = Array.isArray(object)?[]:{}
+
+    for(let key in object){
+        if(object.hasOwnProperty(key)){
+            newObject[key]=object[key]
+        }
+    }
+    return newObject
+}
+
+//深拷贝
+function deepCopy(object){
+    if(!object || typeof object !== 'object')
+        return
+    
+    let newObject=Array.isArray(object)?[]:{}
+    for(let key in object){
+        if(object.hasOwnProperty(key)){
+            newObject[key] = (typeof object[key] === 'object')?deepCopy(object[key]):object[key]
+        }
+    }
+    return newObject
+}
+```
+
+#### 8.手写call、bind、apply
+
+```
+//call
+1.判断调用对象是否为函数，即使我们是定义在函数的原型上的，但是可能出现使用 call 等方式调用的情况。
+2.判断传入上下文对象是否存在，如果不存在，则设置为 window 。
+3.处理传入的参数，截取第一个参数后的所有参数。
+4.将函数作为上下文对象的一个属性。
+5.使用上下文对象来调用这个方法，并保存返回结果。
+6.删除刚才新增的属性。
+7.返回结果。
+
+Function.prototype.mycall=function(context){
+    if(typeof this != 'function'){
+        console.log('type error')
+    }
+
+    let args=[...arguments].slice(1),
+        result=null
+
+    context = context || window
+
+    context.fn=this
+    result = context.fn(...args)
+    delete context.fn
+
+    return result
+}
+
+//apply
+1.判断调用对象是否为函数，即使我们是定义在函数的原型上的，但是可能出现使用 call 等方式调用的情况。
+2.判断传入上下文对象是否存在，如果不存在，则设置为 window 。
+3.将函数作为上下文对象的一个属性。
+4.判断参数值是否传入
+4.使用上下文对象来调用这个方法，并保存返回结果。
+5.删除刚才新增的属性
+6.返回结果
+
+Function.prototype.myApply=function(context){
+    if(typeof this != 'function'){
+        console.log('type error')
+    }
+    let result=null
+    context=context||window
+
+    context.fn=this
+    if(argument[1]){
+        result=context.fn(...arguments[1])
+    }else{
+        result=context.fn()
+    }
+    delete context.fn
+    
+    return result
+}
+
+//bind
+1.判断调用对象是否为函数，即使我们是定义在函数的原型上的，但是可能出现使用 call 等方式调用的情况。
+2.保存当前函数的引用，获取其余传入参数值。
+3.创建一个函数返回
+4.函数内部使用 apply 来绑定函数调用，需要判断函数作为构造函数的情况，这个时候需要传入当前函数的 this 给 apply 调用，其余情况都传入指定的上下文对象。
+
+Function.prototype.myBind=function(){
+    if(type this!=='function'){
+        console.log('type error')
+    }
+
+    var args=[...arguments].slice(1),
+        fn=this
+    
+    return function Fn(){
+        return fn.apply(
+            this instanceof Fn ? this : context,
+            args.concat(...arguments)
+        )
+    }
+}
+```
+参考：<a href='https://github.com/mqyqingfeng/Blog/issues/11'>JavaScript深入之call和apply的模拟实现</a><br>
+
+#### 9.柯里化 
+判断参数的长度是否已经满足函数所需参数的长度,如果满足，执行函数,如果不满足，递归返回科里化的函数，等待参数的传入。
+
+```
+//es6 实现
+function curry(fn,...args){
+    return fn.length <= args.length ? fn(...args) : curry.bind(null,fn,...args)
+}
+```
+
+#### 10.寄生式组合继承
+
+```
+function Person(name){
+    this.name=name
+}
+Person.prototype.sayName=function(){
+    console.log("my name is "+this.name+".")
+}
+function Student(name,grade){
+    Person.call(this,name)
+    this.grade=grade
+}
+Student.prototype = Object.create(Person.prototype)
+Student.protytype.constructor = Student
+
+Student.prototype.sayMyGrade = function(){
+    console.log("My grade is "+this.grade+".")
+}
+```
+
+#### 11.通用的事件侦听器函数
+要兼容三种事件模型，DOM0级、IE事件、DOM3级
+
+```
+const EventUtils={
+    //添加事件
+    addEvent:function(element,type,handler){
+        if(element.addEventListener){
+            element.addEventListener(type,handler,false)
+        }else if(element.attachEvent){
+            element.attachEvent("on"+type,handler)
+        }else{
+            element["on"+type]=handler
+        }
+    },
+    //删除事件
+    removeEvent:function(element,type,handler){
+        if(element.removeEventListener){
+            element.removeEventListener(type,handler,false)
+        }else if(element.detachEvent){
+            element.detachEvent("on"+type,handler)
+        }else{
+            element["on"+type]=null
+        }
+    },
+    //获取目标事件
+    getTarget:function(event){
+        return event.target || event.srcElement
+    }
+    //获取 event 对象的引用
+    getEvent:function(event){
+        return event || window.event
+    }
+    //阻止事件 （主要是事件冒泡，因为 IE 不支持事件捕获）
+    stopPropagation:function(event){
+        if(event.stopPropagation){
+            event.stopPropagation()
+        }else{
+            event.cancelBubble = true
+        }
+    }
+    //取消事件的默认行为
+    preventDefault:function(event){
+        if(event.preventDefault){
+            event.preventDefault()
+        }else {
+            event.returnValue = false
+        }
+    }
+}
+```
+
+#### 手写一个Promise(待填坑...)
+https://github.com/CavsZhouyou/Front-End-Interview-Notebook/blob/master/JavaScript/JavaScript.md  ---137
+
+#### 手写一个jsonp 
+#### 手写一个观察者模式
+#### EventEmitter 实现
+#### 数组去重
+#### 求数组的最大值最小值
+#### 数组flat
+#### 偏函数？
+#### 惰性函数？
+#### sleep
+#### 实现数组reduce
+#### 
+#### 
+#### 
+
+******
+
+### 其他知识点整理
+#### javascript 和浏览器的垃圾回收
+#### ajax 和 fetch

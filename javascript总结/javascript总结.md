@@ -2397,8 +2397,11 @@ function myInstanceof(left,right){
 
 #### 3.new 操作符
 （1）首先创建了一个新的空对象
+
 （2）设置原型，将对象的原型设置为函数的 prototype 对象。
+
 （3）让函数的 this 指向这个对象，执行构造函数的代码（为这个新对象添加属性）
+
 （4）判断函数的返回值类型，如果是值类型，返回创建的对象。如果是引用类型，就返回这个引用类型的对象。
 
 ```
@@ -2582,6 +2585,10 @@ function shallowCopy(object){
     }
     return newObject
 }
+//使用slice、concat 进行浅拷贝
+var newArr=arr.slice()
+var newArr=arr.concat()
+
 
 //深拷贝
 function deepCopy(object){
@@ -2596,6 +2603,8 @@ function deepCopy(object){
     }
     return newObject
 }
+//使用JSON 方法进行深拷贝（适用于数组和对象，但是不能拷贝函数）
+var newArr=JSON.parse(JSON.stringify(arr))
 ```
 
 #### 8.手写call、bind、apply
@@ -2678,7 +2687,7 @@ Function.prototype.myBind=function(){
 ```
 参考：<a href='https://github.com/mqyqingfeng/Blog/issues/11'>JavaScript深入之call和apply的模拟实现</a><br>
 
-#### 9.柯里化 
+#### 9.柯里化 ！！！
 判断参数的长度是否已经满足函数所需参数的长度,如果满足，执行函数,如果不满足，递归返回科里化的函数，等待参数的传入。
 
 ```
@@ -2761,19 +2770,171 @@ const EventUtils={
 }
 ```
 
-#### 手写一个Promise(待填坑...)
-https://github.com/CavsZhouyou/Front-End-Interview-Notebook/blob/master/JavaScript/JavaScript.md  ---137
 
-#### 手写一个jsonp 
-#### 手写一个观察者模式
-#### EventEmitter 实现
-#### 数组去重
-#### 求数组的最大值最小值
-#### 数组flat
+
+#### 12.数组去重
+不仅要掌握方法，而且对各种方法的优缺点要了解。
+
+```
+//使用 indexOf 去重
+function unique(array){
+  var res=[]
+  for(let i=0;i<array.length;i++){
+    var current=array[i]
+    if(res.indexOf[current]===-1){
+      res.push(current)
+    }
+  }
+  return res
+}
+
+//排序后去重
+function unique(array){
+  var res=[]
+  var sortedArray=array.concat().sort()
+  var seen
+  for(let i=0;i<sortedArray.length;i++){
+    if(!i || seen !=sortedArray[i]){
+      res.push(sortedArray[i])
+    }
+    seen=sortedArray[i]
+  }
+  return res
+}
+
+//使用 set
+function unique(array){
+  return array=[...new Set(array)]
+}
+var unique = (a)=>[...new Set(a)]
+
+//使用 map
+function unique(arr){
+  const seen=new Map()
+  return arr.filter((a)=> !seen.has(a)&&seen.set(a,1))
+}
+
+//使用 filter(实际上就是简化了外层循环)
+function unique(array){
+  var res=array.filter(function(item,index,array){
+    return array.indexOf(item)===item
+  })
+  return res
+}
+
+//使用 filter + 排序
+funciton unique(array){
+  return array.concat().sort().filter(function(item,index,array){
+    return !index || item !==array[index-1]
+  })
+}
+
+//使用 reduce
+let unique= arr => arr.reduce((pre,cur)=>pre.includes(cur)?pre:[...pre,cur] , [])
+
+//使用Object 键值对
+function unique(array){
+  var obj={}
+  return array.filter(function(item,index,array){
+    return obj.hasOwnProperty(item)?false:(Obj[item]=true)
+  })
+}
+//我们可以发现，是有问题的，因为 1 和 '1' 是不同的，但是这种方法会判断为同一个值，这是因为对象的键值只能是字符串，所以我们可以使用 typeof item + item 拼成字符串作为 key 值来避免这个问题：
+//所以应该改为：
+    return obj.hasOwnProperty(typeof item+item)?false:(Obj[typeof item+item]=true)
+//然而，即便如此，我们依然无法正确区分出两个对象，比如 {value: 1} 和 {value: 2}，因为 typeof item + item 的结果都会是 object[object Object]，不过我们可以使用 JSON.stringify 将对象序列化：
+    return obj.hasOwnProperty(typeof item+JSON.stringify(item))?false:(Obj[typeof item+JSON.stringify(item)=true])
+```
+
+#### 13.求数组的最大值最小值
+
+```
+//使用 apply
+var arr = [6, 4, 1, 8, 2, 11, 23];
+console.log(Math.max.apply(null, arr))
+
+//使用 ... 
+console.log(Math.max(...arr))
+```
+
+#### 14.数组flat
+
+```
+//使用递归的方式
+function flatten(arr){
+  var result=[]
+  for(let i=0;i<arr.length;i++){
+    if(Array.isArray(arr[i])){
+      result=result.concat(flatten(arr[i]))
+    }else{
+      result.push(arr[i])
+    }
+  }
+  return result
+}
+//使用reduce 简写
+result=arr.reduce(function(pre,item){
+  return pre.concat(Array.isArray(item)?flatten(item):item, [])
+})
+
+//使用toString，会改变元素的类型，只适合都是整数的情况
+function flatten(arr){
+  return arr.toString().split(',').map(function(item){
+    //隐式转换
+    return +item
+  })
+}
+
+//使用 ... 拓展运算符(只可以flat一层)
+function flatten(arr){
+  while(arr.some(item=>Array.isArray(item))){
+    arr=[].concat(...arr)
+  }
+  return arr
+}
+```
+
+#### 15.使用 reduce 方法实现 forEach、map、filter
+
+```
+//forEach
+function MyforEach(arr,handler){
+  arr.reduce(function(pre,item,index){
+    handler(item,index)
+  })
+}
+
+//map
+function MyMap(arr,handler){
+  let result=[]
+  arr.reduce(function(pre,item,index){
+    let mapItem=handler(item,index)
+    result.push(mapItem)
+  })
+  return result
+}
+
+//filter
+function Myfilter(arr,handler){
+  let result=[]
+  arr.reduce(function(pre,item,index){
+    if(handler(item,index){
+      result.push(item)
+    })
+  })
+  return result
+}
+```
+
 #### 偏函数？
 #### 惰性函数？
+#### 函数记忆
 #### sleep
-#### 实现数组reduce
+#### 手写一个Promise(待填坑...)
+https://github.com/CavsZhouyou/Front-End-Interview-Notebook/blob/master/JavaScript/JavaScript.md  ---137
+#### 手写一个观察者模式
+#### 手写一个jsonp 
+#### EventEmitter 实现
 #### 
 #### 
 #### 

@@ -5,14 +5,10 @@
 1. 数据类型、转换、隐式转换、判断       
 2. 执行上下文--作用域、作用域链、变量对象、this、闭包   
 3. 原型、对象的创建和继承               
-
-事件循环--eventloop （小知识点）
-
+4. 异步流程
 javascript垃圾回收、v8引擎垃圾回收 （小知识点）
 
-异步流程：{
-    promise、settimeout、settimeinterval、generator、await/async
-}
+
 
 手写代码：{
     深浅拷贝，
@@ -1464,7 +1460,7 @@ prototype(Child,Parent)
 
 ******
 
-### 4.异步
+### 4.异步流程
 
 #### 任务队列和事件循环
 
@@ -2787,3 +2783,4 @@ https://github.com/CavsZhouyou/Front-End-Interview-Notebook/blob/master/JavaScri
 ### 其他知识点整理
 #### javascript 和浏览器的垃圾回收
 #### ajax 和 fetch
+#### api总结--放链接

@@ -262,10 +262,7 @@ script 脚本请求都不会有跨域的限制，这是因为这些操作都不�
 
 ####  短轮询、长轮询、websocket、webworker
 
-
-
-
-
+#### 安全问题
 
 ### 操作系统
 
@@ -336,3 +333,240 @@ v8 的垃圾回收机制基于分代回收机制，这个机制又基于世代�
 
 
 #### for of vs for in
+
+#### 二分查找
+
+```
+function binarySearch(target,arr,start,end){
+    if(start>end)   return -1
+    let start=start || 0
+    let end=end || arr.length-1
+
+    let mid=Math.floor((start+end)/2)
+    if(target==arr[mid]){
+        return mid
+    }else if(target>arr[mid]){
+        return binarySearch(target,arr,mid+1,end)
+    }else if(target<arr[mid]){
+        return binarySearch(target,arr,start,mid-1)
+    }
+    return -1
+}
+
+
+function binarySearch(target,arr){
+    let start=0
+    let end=arr.length-1
+    while(start<=end){
+        let mid=Math.floor((start+end)/2)
+        if(target==arr[mid]){
+            return mid
+        }else if(target>arr[mid]){
+            start=mid+1
+        }else {
+            end=mid-1
+        }
+    }
+    return -1
+}
+```
+
+#### 排序算法
+
+##### 1. 冒泡排序
+```
+//冒泡排序  复杂度:O(n**2),空间复杂度：O(1),稳定
+function bubbleSort(arr){
+    for(let i=0;i<arr.length-1;i++){
+        for(let j=0;j<arr.length-1;j++){
+            if(arr[j]>arr[j+1]){
+                [arr[j],arr[j+1]]=[arr[j+1],arr[j]]
+            }
+        }
+    }
+    return arr
+}
+
+//简单优化
+function bubbleSort(arr){
+    
+    for(let i=0;i<arr.length;i++){
+        let flag=true
+        for(let j=0;j<arr.length-1-i;j++){
+            if(arr[j]>arr[j+1]){
+                [arr[j],arr[j+1]]=[arr[j+1],arr[j]]
+                flag=false
+            }
+        }
+        if(flag){
+            break;
+        }
+    }
+    return arr
+}
+```
+
+##### 2.选择排序
+
+```
+
+//选择排序  复杂度:O(n**2),空间复杂度：O(1),不稳定
+function selectSort(arr){
+    for(let i=0;i<arr.length-1;i++){
+        let minIndex=i
+        for(let j=i+1;i<arr.length;j++){
+            if(arr[minIndex]>arr[j]){
+                minIndex=j
+            }
+        }
+        [arr[i],arr[minIndex]]=[arr[minIndex],arr[i]]
+    }
+    return arr
+}
+
+```
+
+##### 3.插入排序
+
+```
+//插入排序      复杂度:O(n**2),空间复杂度：O(1),稳定
+function insertSort(arr){
+    for(let i=1;i<arr.length;i++){
+        let cur=arr[i]
+        for(let j=i-1;j>=0;j--){
+            if(cur<a[j]){
+                a[j+1]=a[j]
+            }else{
+                break;
+            }
+            a[j]=cur
+        }
+    }
+    return arr
+}
+
+```
+
+##### 4.归并排序
+复杂度：O(nlogn) 时间复杂度：O(n),稳定
+
+```
+//写法一：写法简单，但是需要复制多个数组，空间复杂度稍高
+functino mergeSort(arr){
+    if(arr.length<2){
+        return arr
+    }
+    let mid=Math.floor(arr.length/2)
+    let front=arr.slice(0,mid)
+    let end=arr.slice(mid)
+    return merge(mergeSort(front),mergeSort(end))
+}
+function merge(front,end){
+    let temp=[]
+    while(front.length && end.length){
+        if(front[0]<end[0]){
+            temp.push(front.shift())
+        }else{
+            temp.push(end.shift())
+        }
+    }
+    while(front.length){
+        temp.push(front.shift())
+    }
+    while(end.length){
+        temp.push(end.shift())
+    }
+    return temp
+}
+
+//写法二：写法复杂，但是只需要一个temp的辅助空间
+function mergeSort(arr,left,right,temp){
+    if(left < right){
+        let mid=Math.floor((left+right)/2)
+        mergeSort(arr,left,mid,temp)
+        mergeSort(arr,mid+1,right,temp)
+        merge(arr,left,right,temp)
+    }
+    return arr
+}
+function merge(arr,left,right,temp){
+    let mid=Math.floor((left+right)/2)
+    let leftIndex=left
+    let rightIndex=mid+1
+    let tempIndex=0
+    while(leftIndex <= mid && rightIndex <= right){
+        if(arr[leftIndex]<arr[rightIndex]){
+            temp[tempIndex++]=arr[leftIndex++]
+        }else{
+            temp[tempIndex++]=arr[rightIndex++]
+        }
+    }
+    while(leftIndex <= mid){
+        temp[tempIndex++]=arr[leftIndex++]
+    }
+    while(rightIndex <= right){
+        temp[tempIndex++]=arr[rightIndex++]
+    }
+
+    tempIndex=0
+    for(let i=left,i<=right;i++){
+        arr[i]=temp[tempIndex++]
+    }
+}
+```
+
+##### 5.快速排序
+
+时间复杂度：平均O(nlogn)，最坏O(n2)，实际上大多数情况下小于O(nlogn)
+
+空间复杂度:O(logn)（递归调用消耗）,不稳定
+
+```
+//写法一：写法简单，但是浪费大量空间
+function quickSort(arr){
+    if(arr.length<2){
+        return arr
+    }
+    let target=arr[0]
+    let left=[]
+    let right=[]
+    for(let i=1;i<arr.length;i++){
+        if(arr[i]<target){
+            left.push(arr[i])
+        }else{
+            right.push(arr[i])
+        }
+    }
+    return quickSort(left).concat([target],quickSort(right))
+}
+
+//写法二：
+function quickSort(arr,start,end){
+    if(end-start <1){
+        return
+    }
+    let target=arr[start]
+    let l=start
+    let r=end
+    while(l<r){
+        while(l<r && arr[r]>=target){
+            r--;
+        }
+        while(l<r && arr[l]<target){
+            l++
+        }
+        arr[r]=arr[l]
+    }
+    arr[l]=target
+    quickSort(arr,start,l-1)
+    quickSort(arr,l+1,end)
+    return arr
+}
+```
+
+##### 6.堆排序
+##### 7.希尔排序（分组版插入排序）
+##### 8.基数排序
+
+
+
